@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MikroTik Analysis Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #161E2F;
+            --surface-low: #242F49;
+            --surface-med: #384358;
+            --accent: #FFA586;
+            --danger: #B51A2B;
+            --wine: #541A2E;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-deep), #0c111a);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin: 0;
+            background: linear-gradient(90deg, var(--accent), #ff7e5f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--surface-low);
+            border-radius: 30px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: var(--surface-med);
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            color: var(--accent);
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Stats Component */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-deep);
+            border-radius: 10px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+
+        .list-container {
+            max-height: 350px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-up {
+            background: var(--accent);
+            color: var(--bg-deep);
+        }
+
+        .status-down {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn {
+            padding: 5px 10px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.7rem;
+            transition: opacity 0.2s;
+            margin-left: 5px;
+        }
+
+        .btn-speed {
+            background: var(--accent);
+            color: var(--bg-deep);
+        }
+
+        .btn-boost {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-boost:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .btn-arp {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-arp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .btn-dhcp {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-dhcp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .speedtest-container {
+            margin-top: 25px;
+            padding: 25px;
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 30px;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            text-align: center;
+            box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.05);
+        }
+
+        .speed-result {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .speed-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--surface-med);
+            padding: 15px 15px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 30%;
+        }
+
+        .speed-val {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .ping-val {
+            color: #10b981;
+            text-shadow: 0 2px 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .down-val {
+            color: #3b82f6;
+            text-shadow: 0 2px 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .up-val {
+            color: var(--accent);
+            text-shadow: 0 2px 10px rgba(255, 165, 134, 0.5);
+        }
+
+        .speed-desc {
+            font-size: 0.70rem;
+            color: var(--text-dim);
+            margin-top: 5px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .btn-speedtest {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            width: 100%;
+            padding: 18px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            letter-spacing: 1px;
+        }
+
+        .btn-speedtest:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Terminal de Logs (mini - para alertas de ação) */
+        .log-terminal-mini {
+            background: #0c111a;
+            border-radius: 15px;
+            padding: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.72rem;
+            color: #10b981;
+            height: 160px;
+            overflow-y: auto;
+            border: 1px solid rgba(16,185,129,0.15);
+            margin-top: 15px;
+            box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* === TERMINAL INTERATIVO === */
+        .terminal-card {
+            border: 1px solid rgba(16,185,129,0.4) !important;
+            background: #0f1923 !important;
+        }
+
+        /* Layout: Otimização + Terminal lado a lado */
+        .opt-terminal-row {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: minmax(280px, 1fr) 2fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .opt-terminal-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .terminal-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 7px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: transparent;
+            color: var(--text-dim);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            background: rgba(16,185,129,0.15);
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Shell terminal */
+        .shell-screen {
+            background: #080d14;
+            border-radius: 15px;
+            border: 1px solid rgba(16,185,129,0.2);
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            color: #10b981;
+            height: 300px;
+            overflow-y: auto;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 0 20px rgba(16,185,129,0.05);
+            position: relative;
+        }
+
+        .shell-line { margin-bottom: 4px; line-height: 1.5; word-break: break-all; }
+        .shell-prompt { color: #fbbf24; }
+        .shell-cmd-text { color: #f8fafc; }
+        .shell-result { color: #94a3b8; font-size: 0.72rem; }
+        .shell-error { color: #f87171; }
+        .shell-success { color: #34d399; }
+
+        .shell-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            background: #080d14;
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 12px;
+            padding: 10px 15px;
+        }
+
+        .shell-prompt-label {
+            color: #fbbf24;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+
+        .shell-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #f8fafc;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            caret-color: #10b981;
+        }
+
+        .shell-send-btn {
+            background: rgba(16,185,129,0.2);
+            color: #10b981;
+            border: 1px solid rgba(16,185,129,0.4);
+            border-radius: 8px;
+            padding: 5px 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .shell-send-btn:hover { background: rgba(16,185,129,0.4); }
+
+        .shell-quickcmds {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .quick-cmd {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-dim);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: 0.2s;
+        }
+        .quick-cmd:hover { background: rgba(16,185,129,0.1); color: #10b981; border-color: rgba(16,185,129,0.3); }
+
+        /* Logs panel */
+        .logs-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .log-filter-btn {
+            padding: 5px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .log-filter-btn.active-all { background: rgba(99,102,241,0.2); border-color: #6366f1; color: #a5b4fc; }
+        .log-filter-btn.active-error { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #fca5a5; }
+        .log-filter-btn.active-warn { background: rgba(245,158,11,0.2); border-color: #f59e0b; color: #fcd34d; }
+        .log-filter-btn.active-info { background: rgba(16,185,129,0.2); border-color: #10b981; color: #6ee7b7; }
+
+        .log-refresh-btn {
+            margin-left: auto;
+            background: rgba(99,102,241,0.15);
+            color: #a5b4fc;
+            border: 1px solid rgba(99,102,241,0.3);
+            padding: 5px 14px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+        .log-refresh-btn:hover { background: rgba(99,102,241,0.3); }
+
+        .mikrotik-log-box {
+            background: #080d14;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            font-family: 'Courier New', monospace;
+            font-size: 0.73rem;
+            height: 320px;
+            overflow-y: auto;
+            box-shadow: inset 0 5px 20px rgba(0,0,0,0.6);
+        }
+
+        .mlog-row {
+            display: grid;
+            grid-template-columns: 140px 120px 1fr;
+            gap: 10px;
+            padding: 7px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            transition: background 0.15s;
+        }
+        .mlog-row:hover { background: rgba(255,255,255,0.03); }
+        .mlog-time { color: #64748b; }
+        .mlog-topic { font-weight: 700; font-size: 0.7rem; }
+        .mlog-topic-error { color: #f87171; }
+        .mlog-topic-warn { color: #fbbf24; }
+        .mlog-topic-info { color: #34d399; }
+        .mlog-topic-other { color: #94a3b8; }
+        .mlog-msg { color: #cbd5e1; }
+
+        .log-line { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 3px; }
+        .log-time { color: var(--text-dim); margin-right: 10px; }
+        .log-error { color: #f87171; }
+
+        /* Mapa da Rede Físico */
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+            align-items: start;
+            /* Impede que colunas com poucas pessoas se estiquem até o final da tela */
+        }
+
+        .map-sector {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-sector h3 {
+            font-size: 0.85rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .map-node {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface-med);
+            margin-bottom: 6px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.70rem;
+            transition: 0.3s;
+            border-left: 3px solid var(--text-dim);
+        }
+
+        .map-node.online {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+
+        .map-node.offline {
+            opacity: 0.6;
+        }
+
+        .map-admin-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 15px;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+        }
+
+        .map-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 150px;
+            font-family: 'Outfit', sans-serif;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .map-input:focus {
+            border-color: #3b82f6;
+        }
+
+        .btn-add-map {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-add-map:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--surface-med);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1 id="router-name">MikroTik Analysis</h1>
+        <p id="system-info" style="color: var(--text-dim)"></p>
+    </div>
+
+    <div class="analysis-grid">
+
+        <!-- Linha: Modo Otimização + Terminal lado a lado -->
+        <div class="opt-terminal-row">
+
+            <!-- Tools Card -->
+            <div class="card" style="border: 1px solid rgba(16, 185, 129, 0.5);">
+                <h2>🚀 Modo Otimização</h2>
+                <p style="font-size: 0.8rem; color: var(--text-dim)">Ferramentas em tempo real da rede.</p>
+                <button class="btn-boost" onclick="boostNetwork()">⚡ ATIVAR BOOST (DNS Cache)</button>
+                <button class="btn-arp" onclick="clearArp()">🔄 RENOVAR TABELA ARP</button>
+                <button class="btn-dhcp" onclick="clearLeases()">🧹 LIMPAR DHCP INATIVOS</button>
+
+                <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                    <button class="btn-boost" style="background: linear-gradient(90deg, #f43f5e, #e11d48); margin-top: 5px;"
+                        onclick="boostJorge()">👑 BOOST JORGE (Sala/Porta 20)</button>
+                    <button class="btn-boost" style="background: linear-gradient(90deg, #8b5cf6, #7c3aed);"
+                        onclick="boostAll()">🌎 BOOST TOTAL (Todas as Portas)</button>
+                </div>
+            </div>
+
+            <!-- Terminal Interativo + Logs MikroTik -->
+            <div class="card terminal-card">
+                <h2>🖥️ Terminal &amp; Logs do Sistema</h2>
+
+                <div class="terminal-tabs">
+                    <button class="tab-btn active" onclick="switchTab('shell')" id="tab-shell">⌨️ Terminal RouterOS</button>
+                    <button class="tab-btn" onclick="switchTab('mikrologs')" id="tab-mikrologs">📋 Logs do MikroTik</button>
+                    <button class="tab-btn" onclick="switchTab('actlogs')" id="tab-actlogs">📡 Log de Ações</button>
+                </div>
+
+                <!-- ABA 1: Terminal Shell -->
+                <div class="tab-panel active" id="panel-shell">
+                    <div class="shell-screen" id="shell-output">
+                        <div class="shell-line"><span class="shell-success"># MikroTik RouterOS Terminal — Dashboard Interface</span></div>
+                        <div class="shell-line shell-result"># Digite comandos no formato: &lt;caminho&gt; print</div>
+                        <div class="shell-line shell-result"># Exemplos: ip address print | queue simple print | interface print</div>
+                        <div class="shell-line shell-result">#─────────────────────────────────────────────────────</div>
+                    </div>
+
+                    <div class="shell-quickcmds">
+                        <span style="font-size:0.72rem; color:var(--text-dim); margin-right:4px;">Rápido:</span>
+                        <button class="quick-cmd" onclick="quickCmd('ip address print')">ip address print</button>
+                        <button class="quick-cmd" onclick="quickCmd('interface print')">interface print</button>
+                        <button class="quick-cmd" onclick="quickCmd('queue simple print')">queue simple print</button>
+                        <button class="quick-cmd" onclick="quickCmd('ip dhcp-server lease print')">dhcp lease print</button>
+                        <button class="quick-cmd" onclick="quickCmd('ip arp print')">ip arp print</button>
+                        <button class="quick-cmd" onclick="quickCmd('system resource print')">system resource print</button>
+                        <button class="quick-cmd" onclick="quickCmd('ip route print')">ip route print</button>
+                        <button class="quick-cmd" onclick="quickCmd('ppp active print')">ppp active print</button>
+                    </div>
+
+                    <div class="shell-input-row">
+                        <span class="shell-prompt-label">[admin@MikroTik] &gt;</span>
+                        <input type="text" class="shell-input" id="shell-input"
+                            placeholder="Ex: ip address print"
+                            onkeydown="shellKeyHandler(event)">
+                        <button class="shell-send-btn" onclick="runShellCmd()">▶ Executar</button>
+                    </div>
+                </div>
+
+                <!-- ABA 2: Logs Reais do MikroTik -->
+                <div class="tab-panel" id="panel-mikrologs">
+                    <div class="logs-toolbar">
+                        <button class="log-filter-btn active-all" id="lf-all" onclick="setLogFilter('all')">🔵 Todos</button>
+                        <button class="log-filter-btn" id="lf-error" onclick="setLogFilter('error')">🔴 Erros</button>
+                        <button class="log-filter-btn" id="lf-warn" onclick="setLogFilter('warning')">🟡 Avisos</button>
+                        <button class="log-filter-btn" id="lf-info" onclick="setLogFilter('info')">🟢 Info</button>
+                        <button class="log-refresh-btn" onclick="fetchMikroLogs()">↻ Atualizar</button>
+                    </div>
+                    <div class="mikrotik-log-box" id="mikrotik-log-box">
+                        <div class="mlog-row"><span class="mlog-time">--:--:--</span><span class="mlog-topic mlog-topic-info">sistema</span><span class="mlog-msg">Carregando logs do MikroTik...</span></div>
+                    </div>
+                </div>
+
+                <!-- ABA 3: Log de Ações do Dashboard -->
+                <div class="tab-panel" id="panel-actlogs">
+                    <div style="height:370px; background:#080d14; border-radius:12px; border:1px solid rgba(255,255,255,0.05); padding:14px; overflow-y:auto; font-family:'Courier New',monospace; font-size:0.75rem; color:#10b981; box-shadow:inset 0 5px 20px rgba(0,0,0,0.6);" id="log-box">
+                        <div class="log-line"><span class="log-time">[SISTEMA]</span> Dashboard iniciado. Monitoramento ativo.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- fim opt-terminal-row -->
+
+        <!-- System Map -->
+        <div class="card" style="grid-column: 1 / -1; border: 1px solid rgba(59, 130, 246, 0.5);">
+            <div style="display:flex; justify-content: space-between; align-items: center;">
+                <h2>🗺️ Mapa Físico da Rede</h2>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">🟢 Online / ⚪ Offline</span>
+            </div>
+
+            <div class="map-admin-form">
+                <input type="text" id="map-setor" class="map-input" placeholder="Setor (ex: Atendimento, RH)">
+                <input type="text" id="map-nome" class="map-input" placeholder="Nome (ex: João ou PC-TV)">
+                <input type="text" id="map-ip" class="map-input" placeholder="IP (ex: 192.168.15.55)">
+                <button class="btn-add-map" onclick="addMapNode()">➕ ADICIONAR AO MAPA</button>
+            </div>
+
+            <div id="map-container" class="map-grid">
+                <div class="loading">Carregando mapa dos setores...</div>
+            </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="card">
+            <h2>📊 Saúde do Sistema</h2>
+            <div id="health-stats">
+                <div class="stat-row">
+                    <span class="stat-label">Uso de CPU</span>
+                    <span class="stat-value" id="cpu-load">0%</span>
+                </div>
+                <div class="progress-container">
+                    <div id="cpu-bar" class="progress-bar"></div>
+                </div>
+
+                <div class="stat-row">
+                    <span class="stat-label">Memória Livre</span>
+                    <span class="stat-value" id="mem-free">0 MB</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Uptime</span>
+                    <span class="stat-value" id="uptime">...</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Versão OS</span>
+                    <span class="stat-value" id="os-version">...</span>
+                </div>
+            </div>
+
+            <!-- Speedtest Module -->
+            <div class="speedtest-container">
+                <button class="btn-speedtest" id="btn-run-speed" onclick="runSpeedtest()">🚀 INICIAR VERIFICAÇÃO DE ROTA
+                    (SPEEDTEST)</button>
+                <div class="speed-result" id="speed-results" style="display:none;">
+                    <div class="speed-item">
+                        <span class="speed-val ping-val" id="st-ping">-</span>
+                        <span class="speed-desc">PING (ms)</span>
+                    </div>
+                    <div class="speed-item">
+                        <span class="speed-val down-val" id="st-down">-</span>
+                        <span class="speed-desc">DOWNLOAD MB/s</span>
+                    </div>
+                    <div class="speed-item">
+                        <span class="speed-val up-val" id="st-up">-</span>
+                        <span class="speed-desc">UPLOAD MB/s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <!-- Interfaces -->
+        <div class="card">
+            <h2>🔌 Portas / Interfaces</h2>
+            <div id="interfaces-list" class="list-container"></div>
+        </div>
+
+        <!-- Local Network (Vivo Modem) -->
+        <div class="card" style="border: 1px solid rgba(139, 92, 246, 0.5);">
+            <h2>🏠 Rede Local Vivo (Modem)</h2>
+            <p style="font-size: 0.75rem; color: var(--text-dim)">Dispositivos lidos diretamente do roteador da
+                operadora.</p>
+            <div id="local-list" class="list-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // === TABS ===
+        function switchTab(name) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+            if (name === 'mikrologs') fetchMikroLogs();
+        }
+
+        // === LOG DE AÇÕES (mini terminal interno) ===
+        function addLog(message, isError = false) {
+            const box = document.getElementById('log-box');
+            const now = new Date();
+            const time = now.toLocaleTimeString();
+            const cssClass = isError ? 'log-error' : '';
+            const html = `<div class="log-line ${cssClass}"><span class="log-time">[${time}]</span> ${message}</div>`;
+            box.innerHTML += html;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // === TERMINAL ROUTEROS ===
+        let shellHistory = [];
+        let shellHistIdx = -1;
+
+        function shellKeyHandler(e) {
+            if (e.key === 'Enter') { runShellCmd(); return; }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (shellHistIdx < shellHistory.length - 1) shellHistIdx++;
+                document.getElementById('shell-input').value = shellHistory[shellHistIdx] || '';
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (shellHistIdx > 0) shellHistIdx--;
+                else shellHistIdx = -1;
+                document.getElementById('shell-input').value = shellHistIdx >= 0 ? shellHistory[shellHistIdx] : '';
+            }
+        }
+
+        function quickCmd(cmd) {
+            document.getElementById('shell-input').value = cmd;
+            document.getElementById('shell-input').focus();
+        }
+
+        function shellPrint(html) {
+            const out = document.getElementById('shell-output');
+            out.innerHTML += html;
+            out.scrollTop = out.scrollHeight;
+        }
+
+        async function runShellCmd() {
+            const inp = document.getElementById('shell-input');
+            const cmd = inp.value.trim();
+            if (!cmd) return;
+
+            shellHistory.unshift(cmd);
+            shellHistIdx = -1;
+            inp.value = '';
+
+            shellPrint(`<div class="shell-line"><span class="shell-prompt">[admin@MikroTik] &gt;</span> <span class="shell-cmd-text">${escHtml(cmd)}</span></div>`);
+
+            try {
+                const res = await fetch('/terminal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd })
+                });
+                const data = await res.json();
+
+                if (data.success && data.result) {
+                    if (data.result.length === 0) {
+                        shellPrint(`<div class="shell-line shell-result">  (sem resultados)</div>`);
+                    } else {
+                        data.result.forEach((row, idx) => {
+                            let lines = [`<span style="color:#6366f1">[${idx}]</span>`];
+                            for (let k in row) {
+                                if (k === '.id') continue;
+                                lines.push(`  <span style="color:#60a5fa">${escHtml(k)}</span>=<span style="color:#e2e8f0">${escHtml(String(row[k]))}</span>`);
+                            }
+                            shellPrint('<div class="shell-line shell-result">' + lines.join('<br>') + '</div>');
+                        });
+                    }
+                    shellPrint(`<div class="shell-line shell-success">  ✔ ${data.result.length} item(s)</div>`);
+                    addLog(`Terminal: ${cmd} → ${data.result.length} resultado(s)`);
+                } else {
+                    shellPrint(`<div class="shell-line shell-error">  ✖ ${escHtml(data.error || 'Erro desconhecido')}</div>`);
+                    addLog(`Erro terminal: ${data.error}`, true);
+                }
+            } catch (e) {
+                shellPrint(`<div class="shell-line shell-error">  ✖ Falha de comunicação com o servidor.</div>`);
+                addLog('Erro de comunicação no terminal', true);
+            }
+
+            shellPrint(`<div class="shell-line"> </div>`);
+        }
+
+        function escHtml(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // === LOGS DO MIKROTIK ===
+        let currentLogFilter = 'all';
+
+        function setLogFilter(f) {
+            currentLogFilter = f;
+            document.querySelectorAll('.log-filter-btn').forEach(b => {
+                b.className = 'log-filter-btn';
+            });
+            const map = { all: 'active-all', error: 'active-error', warning: 'active-warn', info: 'active-info' };
+            const idmap = { all: 'lf-all', error: 'lf-error', warning: 'lf-warn', info: 'lf-info' };
+            document.getElementById(idmap[f]).classList.add(map[f]);
+            fetchMikroLogs();
+        }
+
+        async function fetchMikroLogs() {
+            const box = document.getElementById('mikrotik-log-box');
+            const url = currentLogFilter === 'all' ? '/logs?count=150' : `/logs?topics=${currentLogFilter}&count=150`;
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.error) {
+                    box.innerHTML = `<div class="mlog-row"><span class="mlog-topic mlog-topic-error">ERRO</span><span class="mlog-msg">${escHtml(data.error)}</span></div>`;
+                    return;
+                }
+                if (!data.length) {
+                    box.innerHTML = `<div class="mlog-row"><span class="mlog-msg" style="color:var(--text-dim)">Nenhum log encontrado.</span></div>`;
+                    return;
+                }
+                let html = '';
+                data.forEach(l => {
+                    const topics = (l.topics || '').toLowerCase();
+                    let topicClass = 'mlog-topic-other';
+                    if (topics.includes('error') || topics.includes('critical')) topicClass = 'mlog-topic-error';
+                    else if (topics.includes('warning') || topics.includes('warn')) topicClass = 'mlog-topic-warn';
+                    else if (topics.includes('info') || topics.includes('system') || topics.includes('dhcp')) topicClass = 'mlog-topic-info';
+                    html += `<div class="mlog-row">
+                        <span class="mlog-time">${escHtml(l.time || '--')}</span>
+                        <span class="mlog-topic ${topicClass}">${escHtml(l.topics || '?')}</span>
+                        <span class="mlog-msg">${escHtml(l.message || '')}</span>
+                    </div>`;
+                });
+                box.innerHTML = html;
+            } catch(e) {
+                box.innerHTML = `<div class="mlog-row"><span class="mlog-topic mlog-topic-error">OFFLINE</span><span class="mlog-msg">Não foi possível buscar logs do MikroTik.</span></div>`;
+            }
+        }
+
+        async function alterSpeed(name, limit) {
+            if (!confirm(`Mudar velocidade de ${name} para ${limit}?`)) return;
+            addLog(`Comando: Redefinindo limite PPPoE/Queue '${name}' para ${limit}...`);
+            try {
+                await fetch('/set_speed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, limit: limit })
+                });
+                updateQueues();
+                addLog(`Sucesso: Velocidade de '${name}' alterada!`);
+            } catch (e) {
+                alert("Erro ao mudar velocidade");
+                addLog(`Erro ao alterar velocidade de ${name}`, true);
+            }
+        }
+
+        async function boostNetwork() {
+            if (!confirm("⚡ O 'Boost' vai limpar o cache da rede (DNS) e otimizar conexões ativas. Deseja continuar?")) return;
+            addLog("Executando Boost na Rede e limpando DNS...");
+            try {
+                let res = await fetch('/boost_network', { method: 'POST' });
+                let data = await res.json();
+                if (data.success) {
+                    alert(data.msg || "Boost ativado com sucesso!");
+                    addLog("Boost de DNS executado com sucesso no MikroTik.");
+                }
+                else {
+                    alert("Erro ao enviar comando de Boost.");
+                    addLog("Falha ao executar o Boost de Rede", true);
+                }
+            } catch (e) {
+                alert("Erro de comunicação com o servidor.");
+                addLog("Erro fatal de comunicação (Boost)", true);
+            }
+        }
+
+        async function clearArp() {
+            if (!confirm("🔄 Renovar ARP apaga os registros dinâmicos para forçar os dispositivos a se identificarem novamente. Funciona bem para resolver conflitos de IP. Continuar?")) return;
+            addLog("Limpando cache da Tabela ARP (Recriando rotas dinâmicas)...");
+            try {
+                let res = await fetch('/clear_arp', { method: 'POST' });
+                let data = await res.json();
+                if (data.success) { addLog(`Resultado Tabela ARP: ${data.msg}`); alert(data.msg); }
+                else addLog("Erro no ARP: " + data.error, true);
+            } catch (e) { addLog("Falha ao enviar limpeza ARP", true); }
+        }
+
+        async function clearLeases() {
+            if (!confirm("🧹 Limpar DHCP apaga os IPs oferecidos que não estão mais em uso. Isso libera espaço para novos dispositivos entrarem. Continuar?")) return;
+            addLog("Enviando comando para purgar clientes DHCP inativos (Not Bound)...");
+            try {
+                let res = await fetch('/clear_leases', { method: 'POST' });
+                let data = await res.json();
+                if (data.success) { addLog(`Resultado DHCP: ${data.msg}`); alert(data.msg); }
+                else addLog("Erro DHCP: " + data.error, true);
+            } catch (e) { addLog("Falha no servidor ao limpar DHCP", true); }
+        }
+
+        async function boostJorge() {
+            if (!confirm("🚀 Deseja aplicar o BOOST MÁXIMO na Sala do Jorge (Porta 20)?")) return;
+            addLog("Iniciando Boost prioritário: Sala do Jorge (Porta 20)...");
+            try {
+                const res = await fetch('/boost_jorge', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.msg);
+                    addLog(data.msg);
+                    if (typeof updateQueues === 'function') updateQueues();
+                } else {
+                    alert("Erro: " + data.error);
+                    addLog("Falha no Boost Jorge: " + data.error, true);
+                }
+            } catch (e) {
+                addLog("Erro de conexão ao tentar Boost Jorge", true);
+            }
+        }
+
+        async function boostAll() {
+            if (!confirm("🌎 ATENÇÃO: Deseja aplicar BOOST MÁXIMO em TODAS as filas da rede?")) return;
+            addLog("Iniciando Boost Global em todas as portas...");
+            try {
+                const res = await fetch('/boost_all', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.msg);
+                    addLog(data.msg);
+                    if (typeof updateQueues === 'function') updateQueues();
+                } else {
+                    alert("Erro: " + data.error);
+                    addLog("Falha no Boost Total", true);
+                }
+            } catch (e) {
+                addLog("Erro de conexão ao tentar Boost Total", true);
+            }
+        }
+
+        async function addMapNode() {
+            const setor = document.getElementById('map-setor').value;
+            const nome = document.getElementById('map-nome').value;
+            const ip = document.getElementById('map-ip').value;
+
+            if (!setor || !nome || !ip) {
+                alert("Preencha o Setor, o Nome e o IP para adicionar ao mapa!"); return;
+            }
+
+            try {
+                const res = await fetch('/add_map_node', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ setor, nome, ip })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    addLog(`[MAPA] ${data.msg}`);
+                    document.getElementById('map-nome').value = '';
+                    document.getElementById('map-ip').value = '';
+                    updateMap(); // Força a atualização visual imedita na interface
+                } else {
+                    alert("Erro: " + data.error);
+                }
+            } catch (e) {
+                alert("Erro ao enviar dados pro servidor.");
+            }
+        }
+
+        async function updateAnalysis() {
+            try {
+                const res = await fetch('/analysis');
+                const data = await res.json();
+                const r = data.resource;
+
+                document.getElementById('router-name').innerText = data.identity.name;
+                document.getElementById('cpu-load').innerText = r['cpu-load'] + '%';
+                document.getElementById('cpu-bar').style.width = r['cpu-load'] + '%';
+
+                const freeMem = (parseInt(r['free-memory']) / 1024 / 1024).toFixed(1);
+                const totalMem = (parseInt(r['total-memory']) / 1024 / 1024).toFixed(1);
+                document.getElementById('mem-free').innerText = `${freeMem} MB / ${totalMem} MB`;
+
+                document.getElementById('uptime').innerText = r.uptime;
+                document.getElementById('os-version').innerText = r.version;
+
+                const boardName = r['board-name'] || 'RouterBoard';
+                const archName = r['architecture-name'] || 'MikroTik';
+                document.getElementById('system-info').innerText = `${boardName} | ${archName}`;
+            } catch (e) { }
+        }
+
+        async function updateQueues() {
+            try {
+                const res = await fetch('/queues');
+                const data = await res.json();
+                let html = "";
+                data.forEach(q => {
+                    html += `
+                        <div class="item" style="flex-direction: column; align-items: flex-start;">
+                            <div style="display:flex; justify-content: space-between; width: 100%; margin-bottom: 10px;">
+                                <div>
+                                    <div style="font-weight:600">${q.name}</div>
+                                    <div style="font-size:0.7rem; color:var(--text-dim)">Atual: ${q['max-limit']}</div>
+                                </div>
+                                <div style="text-align:right">
+                                    <button class="btn btn-speed" onclick="alterSpeed('${q.name}', '5M/5M')">5M</button>
+                                    <button class="btn btn-speed" onclick="alterSpeed('${q.name}', '10M/10M')">10M</button>
+                                    <button class="btn btn-speed" onclick="alterSpeed('${q.name}', '50M/50M')">50M</button>
+                                    <button class="btn btn-speed" onclick="alterSpeed('${q.name}', '100M/100M')">100M</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById('queues-list').innerHTML = html || '<p>Nenhuma fila ativa</p>';
+            } catch (e) { }
+        }
+
+        async function updateInterfaces() {
+            try {
+                const res = await fetch('/interfaces');
+                const data = await res.json();
+                let html = "";
+                data.forEach(i => {
+                    const isUp = i.running === 'true' || i.running === true;
+                    html += `
+                        <div class="item">
+                            <div>
+                                <div style="font-weight:600">${i.name}</div>
+                                <div style="font-size:0.8rem; color:var(--text-dim)">${i.type}</div>
+                            </div>
+                            <span class="status-badge ${isUp ? 'status-up' : 'status-down'}">${isUp ? 'ON' : 'OFF'}</span>
+                        </div>
+                    `;
+                });
+                document.getElementById('interfaces-list').innerHTML = html;
+            } catch (e) { }
+        }
+
+        async function updateLeases() {
+            try {
+                const res = await fetch('/leases');
+                const data = await res.json();
+                let html = "";
+                data.forEach(l => {
+                    html += `
+                        <div class="item">
+                            <div>
+                                <div style="font-weight:600">${l.address}</div>
+                                <div style="font-size:0.8rem; color:var(--text-dim)">${l['host-name'] || 'Anônimo'}</div>
+                            </div>
+                            <div style="font-size:0.7rem; text-align:right">
+                                <div>${l['mac-address']}</div>
+                                <div style="color:var(--accent)">Ativo</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById('leases-list').innerHTML = html || '<p>Ninguém conectado</p>';
+            } catch (e) { }
+        }
+
+        let globalActiveIPs = new Set();
+
+        async function updateArp() {
+            try {
+                const res = await fetch('/hosts');
+                const data = await res.json();
+                let html = "";
+                data.forEach(a => {
+                    globalActiveIPs.add(a.address); // Registra IP no Mapa
+                    html += `
+                        <div class="item">
+                            <div>
+                                <div style="font-weight:600">${a.address}</div>
+                                <div style="font-size:0.8rem; color:var(--text-dim)">Porta: ${a.interface}</div>
+                            </div>
+                            <div style="font-size:0.7rem; text-align:right">
+                                <div>${a['mac-address'] || 'Sem MAC'}</div>
+                                <div style="color:var(--accent)">${a.dynamic === 'true' || a.dynamic === true ? 'Dinâmico' : 'Estático'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById('arp-list').innerHTML = html || '<p>Lista vazia</p>';
+            } catch (e) { }
+        }
+
+        async function updatePpp() {
+            try {
+                const res = await fetch('/ppp_active');
+                const data = await res.json();
+                let html = "";
+                if (data.error || data.length === 0) {
+                    html = '<p>Nenhum cliente PPPoE ativo</p>';
+                } else {
+                    data.forEach(p => {
+                        html += `
+                            <div class="item">
+                                <div>
+                                    <div style="font-weight:600">${p.name}</div>
+                                    <div style="font-size:0.8rem; color:var(--text-dim)">IP: ${p.address}</div>
+                                </div>
+                                <div style="font-size:0.7rem; text-align:right">
+                                    <div>${p.uptime}</div>
+                                    <div style="color:var(--accent)">Sessão Ativa</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('ppp-list').innerHTML = html;
+            } catch (e) { }
+        }
+
+        async function updateLocalNetwork() {
+            try {
+                const res = await fetch('/local_network');
+                const data = await res.json();
+                let html = "";
+                if (data.error || data.length === 0) {
+                    html = '<p>Nenhum dispositivo encontrado</p>';
+                } else {
+                    data.forEach(d => {
+                        globalActiveIPs.add(d.address);
+                        html += `
+                            <div class="item">
+                                <div>
+                                    <div style="font-weight:600">${d.address}</div>
+                                    <div style="font-size:0.8rem; color:var(--text-dim)">${d.tipo.toUpperCase()}</div>
+                                </div>
+                                <div style="font-size:0.7rem; text-align:right">
+                                    <div>${d.mac}</div>
+                                    <div style="color:var(--accent)">Conectado no Modem</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('local-list').innerHTML = html;
+            } catch (e) { }
+        }
+
+        async function updateMap() {
+            try {
+                const res = await fetch('/mapa_dados');
+                const data = await res.json();
+                let html = "";
+                if (data.Erro) {
+                    document.getElementById('map-container').innerHTML = `<p>${data.Erro}</p>`;
+                    return;
+                }
+
+                // Monta o mapa dinamicamente lendo o JSON
+                for (let setor in data) {
+                    html += `<div class="map-sector"><h3>${setor}</h3>`;
+                    data[setor].forEach(pessoa => {
+                        let isOnline = globalActiveIPs.has(pessoa.ip);
+                        // Se possui atributo verde/ocupado na planilha, força-o a aparecer como online
+                        let isOcupado = pessoa.ocupado || isOnline;
+                        let cssStatus = isOcupado ? 'online' : 'offline';
+                        let dot = isOnline ? '🟢' : (isOcupado ? '🟩' : '⚪'); // Verde Vivo se ligado, quadrado verdinho fixo.
+                        html += `
+                            <div class="map-node ${cssStatus}">
+                                <div>
+                                    <div style="font-weight:700;">${pessoa.nome}</div>
+                                    <div style="font-size:0.65rem; color:var(--text-dim);">${pessoa.ip}</div>
+                                </div>
+                                <div>${dot}</div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
+                document.getElementById('map-container').innerHTML = html;
+            } catch (e) { }
+        }
+
+        async function runSpeedtest() {
+            const btn = document.getElementById('btn-run-speed');
+            const resBox = document.getElementById('speed-results');
+
+            btn.innerText = "⏳ AVALIANDO SINAL E ROTA... (Isso leva 30s)";
+            btn.style.opacity = '0.5';
+            btn.disabled = true;
+            resBox.style.display = 'none';
+            addLog("Iniciando Teste de Velocidade profundo usando infraestrutura oficial SpeedTest... Aguarde.");
+
+            try {
+                const res = await fetch('/run_speedtest');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('st-ping').innerText = data.ping;
+                    document.getElementById('st-down').innerText = data.download;
+                    document.getElementById('st-up').innerText = data.upload;
+                    resBox.style.display = 'flex';
+                    addLog(`Teste concluído! Ping: ${data.ping}ms | Down: ${data.download}MB | Up: ${data.upload}MB`);
+                } else {
+                    alert("Erro no medidor: " + data.error);
+                    addLog("Erro crítico durante o Teste de Velocidade: " + data.error, true);
+                }
+            } catch (e) {
+                alert("Falha ao comunicar com servidor de teste.");
+                addLog("Rede do laboratório não conseguiu atingir o host Speedtest.", true);
+            }
+
+            btn.innerText = "🚀 REFAZER TESTE DE VELOCIDADE";
+            btn.style.opacity = '1';
+            btn.disabled = false;
+        }
+
+        // Loops de chamadas iniciais
+        updateAnalysis(); updateInterfaces();
+        updateArp(); updateLocalNetwork(); updateMap();
+
+        // Loops Cronometrados
+        setInterval(updateAnalysis, 2000);
+        setInterval(updateInterfaces, 5000);
+        setInterval(updateArp, 5000); // Precisamos do ARP por causa do Mapa (para descobrir globais)
+        setInterval(updateLocalNetwork, 10000);
+        setInterval(updateMap, 6000); // Atualiza o visual do mapa
+    </script>
+</body>
+
+</html>
