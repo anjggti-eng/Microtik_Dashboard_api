@@ -1,0 +1,41 @@
+# Arquivos de Sistema
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+Thumbs.db
+
+# Ambientes Virtuais
+venv/
+env/
+ENV/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Arquivos Temporários
+*.tmp
+*.bak
+*.swp
+
+# Certificados (se houver localmente)
+*.pem
+*.key
+
+# Build e Dist
+dist/
+build/
+*.egg-info/
+
+# Cache
+.pytest_cache/
+.coverage
+htmlcov/

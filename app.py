@@ -10,6 +10,11 @@ log.setLevel(logging.ERROR)
 
 app = Flask(__name__)
 
+@app.route("/health")
+def health():
+    """Health check endpoint - não depende do MikroTik"""
+    return jsonify({"status": "ok", "message": "Dashboard is running"}), 200
+
 def get_api_connection():
     # Cria uma conexão nova e limpa para cada requisição
     connection = routeros_api.RouterOsApiPool(
@@ -478,6 +483,7 @@ if __name__ == "__main__":
     print(f"\n==============================================")
     print(f"🚀 DASHBOARD ONLINE: http://localhost:8000")
     print(f"📡 CONECTADO EM: {config.ROUTER_IP}")
+    print(f"✅ Health Check disponível em: /health")
     print(f"==============================================\n")
     # threaded=False evita que o MikroTik receba multiplas conexões simultaneas do mesmo app
-    app.run(host="0.0.0.0", port=8000, threaded=False)
+    app.run(host="0.0.0.0", port=8000, threaded=False, debug=False)
