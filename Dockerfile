@@ -23,6 +23,7 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Usar script de inicialização que valida tudo antes de rodar
-ENTRYPOINT ["python"]
-CMD ["start.py"]
+# Usar gunicorn para produção, ouvindo em todas as interfaces na porta 8000
+# O script start.py pode ser usado para validação pré-vôo se necessário, 
+# mas para o servidor HTTP o gunicorn é mais robusto.
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "2", "app:app"]

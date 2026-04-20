@@ -2,3 +2,4 @@ flask
 routeros-api
 requests
 speedtest-cli
+gunicorn
