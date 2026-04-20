@@ -4,7 +4,7 @@ FROM python:3.10-slim
 # Define a pasta de trabalho dentro do container
 WORKDIR /app
 
-# Instala dependências do sistema necessárias (opcional, mas recomendado)
+# Instala dependências do sistema necessárias
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -19,5 +19,10 @@ COPY . .
 # Expõe a porta que o seu Flask/Dashboard usa
 EXPOSE 8000
 
-# Comando para rodar a aplicação
-CMD ["python", "app.py"]
+# Health check para verificar se o app está rodando
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Usar script de inicialização que valida tudo antes de rodar
+ENTRYPOINT ["python"]
+CMD ["start.py"]
