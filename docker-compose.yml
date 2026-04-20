@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  dashboard:
+    build: .
+    container_name: mikrotik-dashboard
+    ports:
+      - "8000:8000"
+    environment:
+      # Configure com os dados do seu MikroTik
+      ROUTER_IP: "192.168.15.2"
+      USERNAME: "admin"
+      PASSWORD: "123"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      # Opcional: para persistência de dados
+      - ./mapa_rede.json:/app/mapa_rede.json
+    networks:
+      - dashboard-network
+
+networks:
+  dashboard-network:
+    driver: bridge

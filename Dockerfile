@@ -23,7 +23,15 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Usar gunicorn para produção, ouvindo em todas as interfaces na porta 8000
-# O script start.py pode ser usado para validação pré-vôo se necessário, 
-# mas para o servidor HTTP o gunicorn é mais robusto.
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "2", "app:app"]
+# Usar Gunicorn para produção - bind em 0.0.0.0:8000
+# workers=1 pois MikroTik API não gosta de múltiplas conexões simultâneas
+# threads=2 para melhor performance com I/O
+# timeout=120 para operações longas no MikroTik
+CMD ["gunicorn", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "1", \
+     "--threads", "2", \
+     "--timeout", "120", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "wsgi:app"]
