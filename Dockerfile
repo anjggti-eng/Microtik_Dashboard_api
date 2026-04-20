@@ -10,11 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia o arquivo de requisitos e instala as bibliotecas
-COPY requirements.txt .
+COPY "Desktop/MIcrotik api/mikrotik-dashboard/requirements.txt" .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia todo o resto do seu código
-COPY . .
+COPY "Desktop/MIcrotik api/mikrotik-dashboard" .
 
 # Expõe a porta que o seu Flask/Dashboard usa
 EXPOSE 8000
