@@ -14,7 +14,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia todo o resto do seu código
-COPY .
+COPY . .
 
 # Expõe a porta que o seu Flask/Dashboard usa
 EXPOSE 8000
